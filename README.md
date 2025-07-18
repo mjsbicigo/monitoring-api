@@ -63,20 +63,20 @@ The application will be available at `http://localhost:8080`.
 
 ## API Routes
 
-### `/v2/mongohealth`
+### `/v1/mongohealth`
 
 #### Description
 Checks the health of one or more MongoDB servers, returning the individual status of each (OK or error).
 
 #### Method
-`GET /v2/mongohealth`
+`GET /v1/mongohealth`
 
 #### Query Parameters (optional)
 
 - `server`: server name(s), as extracted from the URI.
   - Example:
     ```
-    /v2/mongohealth?server=cluster1.mongodb.net&server=cluster2.mongodb.net
+    /v1/mongohealth?server=cluster1.mongodb.net&server=cluster2.mongodb.net
     ```
 
   - If omitted, **all** servers defined in `MONGODB_URIS` will be checked.
@@ -129,13 +129,13 @@ x-api-key: your_api_key_here
 
 ---
 
-### `/v2/isalive`
+### `/v1/isalive`
 
 #### Description
 Checks if the API is alive (liveness probe).
 
 #### Method
-`GET /v2/isalive`
+`GET /v1/isalive`
 
 #### Response
 ```json
