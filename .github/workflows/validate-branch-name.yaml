@@ -7,17 +7,24 @@ on:
 jobs:
   validate_branch_name:
     runs-on: ubuntu-latest
-    name: Ensure branch name is semver (vX.Y.Z)
+    name: Ensure branch name follows allowed patterns
+
     steps:
       - name: Check branch name format
         run: |
           BRANCH_NAME="${{ github.head_ref }}"
-
           echo "Checking branch name: $BRANCH_NAME"
 
-          if [[ ! "$BRANCH_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error ::Branch name must follow format 'vX.Y.Z' (e.g., v1.0.0)"
+          # Regex para padrões aceitos
+          if [[ ! "$BRANCH_NAME" =~ ^(main|v[0-9]+\.[0-9]+\.[0-9]+|release/v[0-9]+\.[0-9]+\.[0-9]+|hotfix/v[0-9]+\.[0-9]+\.[0-9]+|feat/.+|fix/.+|chore/.+)$ ]]; then
+            echo "::error ::❌ Branch name '$BRANCH_NAME' is invalid. Use one of the allowed patterns:"
+            echo "::error ::  - vX.Y.Z"
+            echo "::error ::  - release/vX.Y.Z"
+            echo "::error ::  - hotfix/vX.Y.Z"
+            echo "::error ::  - feat/..."
+            echo "::error ::  - fix/..."
+            echo "::error ::  - chore/..."
             exit 1
           fi
 
-          echo "Branch name is valid."
+          echo "✅ Branch name '$BRANCH_NAME' is valid."
