@@ -32,6 +32,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Skip CI if only documentation files changed
+        run: |
+          echo "Checking changed files for possible CI bypass..."
+          git fetch origin main --depth=1
+          CHANGED_FILES=$(git diff --name-only HEAD^ HEAD)
+          echo "$CHANGED_FILES"
+
+          # Allow only README.md, files inside docs/, or .github/README.md
+          if echo "$CHANGED_FILES" | grep -vE '^(README\.md|docs/.*|\.github/README\.md)$' > /dev/null; then
+            echo "Non-documentation files changed. Proceeding with full pipeline..."
+          else
+            echo "Only documentation files changed. Skipping build/push/release steps."
+            exit 0
+          fi
+
       - name: Set up Git user
         run: |
           git config user.name "github-actions"
