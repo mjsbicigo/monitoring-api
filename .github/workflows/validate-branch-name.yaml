@@ -1,0 +1,23 @@
+name: Validate Branch Name
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  validate_branch_name:
+    runs-on: ubuntu-latest
+    name: Ensure branch name is semver (vX.Y.Z)
+    steps:
+      - name: Check branch name format
+        run: |
+          BRANCH_NAME="${{ github.head_ref }}"
+
+          echo "Checking branch name: $BRANCH_NAME"
+
+          if [[ ! "$BRANCH_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error ::Branch name must follow format 'vX.Y.Z' (e.g., v1.0.0)"
+            exit 1
+          fi
+
+          echo "Branch name is valid."
