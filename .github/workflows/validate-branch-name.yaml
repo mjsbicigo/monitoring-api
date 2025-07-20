@@ -16,7 +16,7 @@ jobs:
           echo "Checking branch name: $BRANCH_NAME"
 
           # Define allowed patterns
-          if [[ ! "$BRANCH_NAME" =~ ^(main|develop|feat/.+|fix/.+|chore/.+|docs/.+|ci/.+|test/.+|style/.+|refactor/.+|build/.+)$ ]]; then
+          if [[ ! "$BRANCH_NAME" =~ ^(main|develop|feat/.+|fix/.+|chore/.+|docs/.+|ci/.+|test/.+|style/.+|refactor/.+|build/.+|release-please--branches--.+)$ ]]; then
             echo "::error :: The branch name '$BRANCH_NAME' is invalid."
             echo "::error :: Use one of the allowed patterns:"
             echo "::error ::    - feat/feature-name"
@@ -28,6 +28,7 @@ jobs:
             echo "::error ::    - style/formatting"
             echo "::error ::    - refactor/internal-improvements"
             echo "::error ::    - build/build-adjustments"
+            echo "::error ::    - release-please--branches--main (used by release automation)"
             exit 1
           fi
 
