@@ -32,7 +32,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Skip CI if only documentation files changed
+      - name: Skip CI if only documentation or .github files changed
         run: |
           echo "Checking changed files for possible CI bypass..."
           if [ "${{ github.event_name }}" = "pull_request" ]; then
@@ -45,11 +45,11 @@ jobs:
           echo "Changed files:"
           echo "$CHANGED_FILES"
 
-          # Allow only README.md, files inside docs/, or .github/README.md
-          if echo "$CHANGED_FILES" | grep -vE '^(README\.md|docs/.*|\.github/README\.md)$' > /dev/null; then
+          # Allow only README.md, files inside docs/, or any file inside .github/
+          if echo "$CHANGED_FILES" | grep -vE '^(README\.md|docs/.*|\.github/.*)$' > /dev/null; then
             echo "Changes include non-documentation files. Continuing pipeline..."
           else
-            echo "::notice ::Only documentation files were changed. Skipping build/push/release steps."
+            echo "::notice ::Only documentation or .github files were changed. Skipping build/push/release steps."
             exit 0
           fi
 
