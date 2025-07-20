@@ -1,4 +1,4 @@
-# MongoDB Monitoring API
+# Monitoring API
 
 This API's main functionality is to monitor the status of multiple MongoDB servers, allowing individual or batch queries, with authentication via API Key and dynamic configuration through environment variables.
 
