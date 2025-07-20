@@ -36,8 +36,9 @@ jobs:
         run: |
           echo "Checking changed files for possible CI bypass..."
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            git fetch origin ${{ github.base_ref }} --depth=1
-            CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }} HEAD)
+            BASE_SHA=$(git rev-parse HEAD^1)
+            HEAD_SHA=$(git rev-parse HEAD)
+            CHANGED_FILES=$(git diff --name-only $BASE_SHA $HEAD_SHA)
           else
             CHANGED_FILES=$(git diff --name-only HEAD^ HEAD)
           fi
