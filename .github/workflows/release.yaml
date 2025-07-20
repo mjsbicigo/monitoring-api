@@ -1,24 +1,14 @@
-name: CI - Build and Push Docker Image
+name: Release Docker Image
 
 on:
-  pull_request:
-    types: [closed]
-    branches:
-      - main
   push:
-    branches:
-      - main
     tags:
-      - '*'
+      - 'v*'
 
 jobs:
-  build_and_push:
-    if: |
-      (github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main') ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/'))
-    name: Build, Tag, and Push Docker Image
+  build-and-push-tag:
     runs-on: ubuntu-latest
+    name: Build and publish Docker image
 
     permissions:
       contents: write
@@ -32,39 +22,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Skip CI if only documentation or .github files changed
-        run: |
-          echo "Checking changed files for possible CI bypass..."
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            BASE_SHA=$(git rev-parse HEAD^1)
-            HEAD_SHA=$(git rev-parse HEAD)
-            CHANGED_FILES=$(git diff --name-only $BASE_SHA $HEAD_SHA)
-          else
-            CHANGED_FILES=$(git diff --name-only HEAD^ HEAD)
-          fi
-          echo "Changed files:"
-          echo "$CHANGED_FILES"
-
-          # Allow only README.md, files inside docs/, or any file inside .github/
-          if echo "$CHANGED_FILES" | grep -vE '^(README\.md|docs/.*|\.github/.*)$' > /dev/null; then
-            echo "Changes include non-documentation files. Continuing pipeline..."
-          else
-            echo "::notice ::Only documentation or .github files were changed. Skipping build/push/release steps."
-            exit 0
-          fi
-
-      - name: Set up Git user
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-
-      - name: Create Git tag if PR was version-named
-        if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'v')
-        run: |
-          VERSION=${{ github.head_ref }}
-          git tag "$VERSION"
-          git push origin "$VERSION"
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -74,42 +31,11 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract version
+      - name: Extract version from tag
         id: version
         run: |
-          echo "Extracting version information..."
-
-          VERSION=""
-          IS_TAG=false
-
-          # Tag push
-          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            VERSION="${GITHUB_REF#refs/tags/}"
-            IS_TAG=true
-
-          # Pull request (use source branch name)
-          elif [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
-            VERSION="${GITHUB_HEAD_REF}"
-            IS_TAG=false
-
-          # Direct push to main
-          elif [[ "${GITHUB_REF}" == refs/heads/* ]]; then
-            BRANCH_NAME="${GITHUB_REF#refs/heads/}"
-            if [[ "$BRANCH_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-              VERSION="$BRANCH_NAME"
-              IS_TAG=true
-            else
-              SHORT_SHA=$(git rev-parse --short HEAD)
-              DATE=$(date +'%Y%m%d')
-              VERSION="snapshot-${DATE}-${SHORT_SHA}"
-              IS_TAG=false
-            fi
-          fi
-
-          VERSION_CLEAN=$(echo "$VERSION" | tr '/' '-')
-          echo "version=${VERSION_CLEAN}" >> $GITHUB_OUTPUT
-          echo "is_tag=${IS_TAG}" >> $GITHUB_OUTPUT
-          echo "Computed version: $VERSION_CLEAN (tag: $IS_TAG)"
+          VERSION="${GITHUB_REF#refs/tags/}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -120,8 +46,7 @@ jobs:
             ${{ env.DOCKERHUB_REPO }}:${{ steps.version.outputs.version }}
             ${{ env.DOCKERHUB_REPO }}:latest
 
-      - name: Create GitHub Release (only if tag)
-        if: steps.version.outputs.is_tag == 'true'
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.version }}

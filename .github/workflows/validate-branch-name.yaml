@@ -15,16 +15,20 @@ jobs:
           BRANCH_NAME="${{ github.head_ref }}"
           echo "Checking branch name: $BRANCH_NAME"
 
-          # Regex para padrões aceitos
-          if [[ ! "$BRANCH_NAME" =~ ^(main|v[0-9]+\.[0-9]+\.[0-9]+|release/v[0-9]+\.[0-9]+\.[0-9]+|hotfix/v[0-9]+\.[0-9]+\.[0-9]+|feat/.+|fix/.+|chore/.+)$ ]]; then
-            echo "::error ::❌ Branch name '$BRANCH_NAME' is invalid. Use one of the allowed patterns:"
-            echo "::error ::  - vX.Y.Z"
-            echo "::error ::  - release/vX.Y.Z"
-            echo "::error ::  - hotfix/vX.Y.Z"
-            echo "::error ::  - feat/..."
-            echo "::error ::  - fix/..."
-            echo "::error ::  - chore/..."
+          # Define allowed patterns
+          if [[ ! "$BRANCH_NAME" =~ ^(main|develop|feat/.+|fix/.+|chore/.+|docs/.+|ci/.+|test/.+|style/.+|refactor/.+|build/.+)$ ]]; then
+            echo "::error :: The branch name '$BRANCH_NAME' is invalid."
+            echo "::error :: Use one of the allowed patterns:"
+            echo "::error ::    - feat/feature-name"
+            echo "::error ::    - fix/bug-description"
+            echo "::error ::    - chore/minor-adjustment"
+            echo "::error ::    - docs/readme-update"
+            echo "::error ::    - ci/pipeline-changes"
+            echo "::error ::    - test/unit-tests"
+            echo "::error ::    - style/formatting"
+            echo "::error ::    - refactor/internal-improvements"
+            echo "::error ::    - build/build-adjustments"
             exit 1
           fi
 
-          echo "✅ Branch name '$BRANCH_NAME' is valid."
+          echo "Branch name '$BRANCH_NAME' is valid."
