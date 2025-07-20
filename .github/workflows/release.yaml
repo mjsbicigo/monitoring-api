@@ -35,8 +35,12 @@ jobs:
       - name: Skip CI if only documentation files changed
         run: |
           echo "Checking changed files for possible CI bypass..."
-          git fetch --depth=2 origin ${{ github.ref }}
-          CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r HEAD)
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git fetch origin ${{ github.base_ref }} --depth=1
+            CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }} HEAD)
+          else
+            CHANGED_FILES=$(git diff --name-only HEAD^ HEAD)
+          fi
           echo "Changed files:"
           echo "$CHANGED_FILES"
 
