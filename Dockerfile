@@ -1,5 +1,5 @@
 # Using slim Python image for smaller footprint
-FROM python:3.13-slim
+FROM python:3.14-slim
 
 # Define enviroment variables for better Python performance and to avoid writing .pyc files
 ENV PYTHONDONTWRITEBYTECODE=1 \
