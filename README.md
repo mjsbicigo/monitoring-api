@@ -29,7 +29,7 @@ Esta API fornece uma interface centralizada para o monitoramento contínuo de at
 
 ## 📋 Pré-requisitos
 
-- Python **3.13** instalado
+- Python **3.14** instalado
 - `pip` (gerenciador de pacotes do Python) atualizado
 
 ### Variáveis de Ambiente Necessárias
