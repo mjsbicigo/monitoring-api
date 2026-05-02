@@ -1,17 +1,18 @@
-import os
+import logging
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Optional
 
-# Definindo as variáveis de ambiente:
-    # Chave de API.
-    # URIs de conexão com o MongoDB
-class Settings:
-    API_KEY: str = os.getenv("API_KEY", None)
-    MONGODB_URIS = os.getenv("MONGODB_URIS", None)
+class Settings(BaseSettings):
+    API_KEY: str = "default-insecure-key" 
+    MONGODB_URIS: Optional[str] = None
     
-    # Verificando se as variáveis de ambiente existem
-    def __init__(self):
-        if not self.MONGODB_URIS:
-            raise ValueError("Missing environment variable: MONGODB_URIS")
-        if not self.API_KEY:
-            raise ValueError("Missing environment variable: API_KEY")
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 settings = Settings()
+
+# Security warning for default API key
+if settings.API_KEY == "default-insecure-key":
+    logging.warning("\nWARNING: Running with default API_KEY. Please set the API_KEY environment variable for production environments!")
+    
+if not settings.MONGODB_URIS:
+    logging.info("\nINFO: MONGODB_URIS not set. Mongo health checks will return disabled status.")

@@ -1,0 +1,8 @@
+datetime
+fastapi
+pydantic
+pydantic-settings
+pymongo
+requests
+typing
+uvicorn
