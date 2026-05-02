@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 
-class ServerStatus(BaseModel):
+class MongoDbServerStatus(BaseModel):
     server: str
     status: str
     error: Optional[str] = None

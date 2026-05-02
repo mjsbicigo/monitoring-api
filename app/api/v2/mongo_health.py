@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from datetime import datetime
-from models.v1.server_status import ServerStatus
+from models.v2.db_server_status import MongoDbServerStatus
 from security.api_key import get_api_key
 from pymongo import MongoClient
 from config import settings
@@ -15,9 +15,9 @@ def get_mongodb_collection(mongodb_uri: str):
     Returns the collection to be queried.
     """
     client = MongoClient(mongodb_uri)
-    db = client["RandomDBName"] # Connects to a random database name, you can specify.
+    db = client["AllTenants"]
     
-    return db["RandomCollectionNameFromDB"] # Returns a random collection name from the previous specified database.
+    return db["Tenants"]
 
 def get_server_name(mongodb_uri: str) -> str:
     """
@@ -29,14 +29,24 @@ def get_server_name(mongodb_uri: str) -> str:
         return match.group(1)
     return "Unknown Server"
 
-@router.get("/mongohealth", response_model=List[ServerStatus], dependencies=[Depends(get_api_key)])
+@router.get("/mongohealth", response_model=List[MongoDbServerStatus], dependencies=[Depends(get_api_key)])
 async def health_check(server: Optional[List[str]] = Query(default=None)):
     """
     This route checks the status of the MongoDB(s).
     - If 'server' is provided, checks only the specified servers.
     - If 'server' is omitted, checks all servers.
+
+    Ps: Server URI(s) must be defined in the configuration file as MONGODB_URIS, separated by commas. The server name is extracted from the URI for display purposes.
     """
-    all_uris = settings.MONGODB_URIS.split(",")
+    
+    if not settings.MONGODB_URIS:
+        return [{
+            "server": "N/A",
+            "status": "error",
+            "error": "No MongoDB URIs configured. Please set MONGODB_URIS in your configuration file."
+        }]
+    
+    all_uris = [uri.strip() for uri in settings.MONGODB_URIS.split(",") if uri.strip()]
 
     if server:
         uris_to_check = [uri for uri in all_uris if get_server_name(uri) in server]

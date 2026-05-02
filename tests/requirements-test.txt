@@ -1,0 +1,7 @@
+fastapi
+httpx
+pydantic_settings
+pymongo
+pytest
+requests
+uvicorn

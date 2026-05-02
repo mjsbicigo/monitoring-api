@@ -1,0 +1,24 @@
+# Git
+.git
+.gitignore
+
+# Python e Ambientes Virtuais
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+
+# Testes e Ferramentas (Não devem ir para produção)
+tests/
+.pytest_cache/
+pytest.ini
+
+# IDEs
+.vscode/
+.idea/
+
+# Variáveis de Ambiente locais (Muito importante não vazar isso no Registry!)
+.env
+.env.*
