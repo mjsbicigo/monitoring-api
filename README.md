@@ -1,93 +1,149 @@
 # Monitoring API
 
-This API's main functionality is to monitor the status of multiple MongoDB servers, allowing individual or batch queries, with authentication via API Key and dynamic configuration through environment variables.
+Esta API fornece uma interface centralizada para o monitoramento contínuo de ativos de infraestrutura dentro de ambientes Kubernetes. Projetada para ser extensível, a API atualmente suporta:
 
-> **Note:**  
-> This solution was developed to work in conjunction with the Elasticsearch monitoring feature, enabling continuous querying of MongoDB server status and sending alerts through various contact channels if any server becomes unavailable.  
-> The API architecture allows for future enhancements to monitor other types of applications beyond MongoDB, expanding its usefulness for different monitoring scenarios.
+- Verificação detalhada de saúde de clusters MongoDB
+- Validação de disponibilidade de endpoints genéricos (HTTP/HTTPS)
 
-## Features
+---
 
-- Status check of multiple MongoDB servers.
-- Ability to check all servers or only specific ones.
-- Dynamic configuration via environment variables.
-- Route protection with API Key.
-- Detailed response with the individual status of each queried server.
+## Funcionalidades
 
-## Prerequisites
+### 🗄️ Monitoramento MongoDB
+- Verificação de status de múltiplos servidores
+- Consulta de todo o cluster ou apenas nós específicos
 
-- Python 3.7 or higher installed.
-- Pip (Python package manager) installed.
-- Required environment variables:
-  - `API_KEY` – API authentication key.
-  - `MONGODB_URIS` – comma-separated list of MongoDB connection URIs.
+### 🌐 Monitoramento Genérico
+- Validação de disponibilidade de URLs e serviços externos via HTTP/HTTPS
 
-## Installation
+### ⚙️ Configuração Dinâmica
+- Gerenciamento de alvos e credenciais via variáveis de ambiente
 
-1. Clone the repository:
+### 🔐 Segurança
+- Proteção de todas as rotas de consulta utilizando **API Key**
 
-    ```bash
-    git clone https://github.com/stefanini-applications/mongodb-monitoring-api.git
-    cd mongodb-monitoring-api
-    ```
+### ☸️ Prontidão para Orquestração
+- Endpoints dedicados para **liveness** e **readiness probes**
 
-2. Install the dependencies:
+---
 
-    ```bash
-    pip install -r requirements.txt
-    ```
+## 📋 Pré-requisitos
 
-3. Set the environment variables:
+- Python **3.13** instalado
+- `pip` (gerenciador de pacotes do Python) atualizado
 
-    **Windows (PowerShell):**
-    ```powershell
-    $Env:API_KEY="your_api_key_here"
-    $Env:MONGODB_URIS="mongo_uri1,mongo_uri2"
-    ```
+### Variáveis de Ambiente Necessárias
 
-    **Linux/macOS:**
-    ```bash
-    export API_KEY="your_api_key_here"
-    export MONGODB_URIS="mongo_uri1,mongo_uri2"
-    ```
+| Variável | Descrição |
+|----------|------------|
+| `API_KEY` | Chave de autenticação da API |
+| `MONGODB_URIS` | Lista separada por vírgulas das URIs de conexão MongoDB |
 
-## Usage
+---
 
-Run the application with:
+**⚠️ Aviso de Segurança (IMPORTANTE)**
+
+- **`API_KEY`**: para facilitar testes e desenvolvimento a aplicação define um valor padrão `default-insecure-key` quando a variável `API_KEY` não é fornecida. Esse comportamento **é somente para ambientes de desenvolvimento/teste**. Em ambientes de produção a variável `API_KEY` é **estritamente necessária** por motivos de segurança — não execute a API em produção com a chave padrão.
+
+- **`MONGODB_URIS`**: Variável opcional. Se não estiver configurada, as requisições feitas para o endpoint `/v2/mongohealth` retornam um payload informando que os URIs não foram configurados:
+
+```json
+[
+  {
+    "server": "N/A",
+    "status": "error",
+    "error": "No MongoDB URIs configured. Please set MONGODB_URIS in your configuration file."
+  }
+]
+```
+
+## 🛠️ Instalação
+
+### 1️⃣ Clone o repositório
+
+```bash
+git clone https://github.com/mjsbicigo/monitoring-api.git
+cd monitoring-api
+```
+
+### 2️⃣ Instale as dependências
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3️⃣ Configure as variáveis de ambiente
+
+#### Linux/macOS
+
+```bash
+export API_KEY="sua_api_key_aqui"
+export MONGODB_URIS="uri_mongo1,uri_mongo2"
+```
+
+#### Windows (PowerShell)
+
+```powershell
+$Env:API_KEY="sua_api_key_aqui"
+$Env:MONGODB_URIS="uri_mongo1,uri_mongo2"
+```
+
+---
+
+## ▶️ Uso Local
+
+Execute a aplicação localmente com:
 
 ```bash
 uvicorn app.main:app --host 0.0.0.0 --port 8080
 ```
 
-The application will be available at `http://localhost:8080`.
+A aplicação ficará disponível em:
 
-## API Routes
-
-### `/v1/mongohealth`
-
-#### Description
-Checks the health of one or more MongoDB servers, returning the individual status of each (OK or error).
-
-#### Method
-`GET /v1/mongohealth`
-
-#### Query Parameters (optional)
-
-- `server`: server name(s), as extracted from the URI.
-  - Example:
-    ```
-    /v1/mongohealth?server=cluster1.mongodb.net&server=cluster2.mongodb.net
-    ```
-
-  - If omitted, **all** servers defined in `MONGODB_URIS` will be checked.
-
-#### Authentication
-Required via API Key in the header:
 ```
-x-api-key: your_api_key_here
+http://localhost:8080
 ```
 
-#### Example Response - Success
+---
+
+# 📡 Rotas da API (v2)
+
+## 🔎 `/v2/mongohealth`
+
+### 📌 Descrição
+
+Verifica a saúde de um ou mais servidores MongoDB, retornando o status de conectividade individual de cada nó (`ok` ou `error`).
+
+### 🧭 Método
+
+```
+GET /v2/mongohealth
+```
+
+### 🔍 Parâmetros de Query (Opcional)
+
+| Parâmetro | Descrição |
+|------------|------------|
+| `server` | Nome do servidor (ou múltiplos), conforme extraído da URI |
+
+**Exemplo:**
+
+```
+/v2/mongohealth?server=cluster1.mongodb.net&server=cluster2.mongodb.net
+```
+
+Se omitido, a API verifica todos os servidores definidos na variável `MONGODB_URIS`.
+
+### 🔐 Autenticação
+
+Obrigatória via header:
+
+```http
+x-api-key: sua_api_key_aqui
+```
+
+### ✅ Exemplo de Resposta — Sucesso
+
 ```json
 [
   {
@@ -101,26 +157,17 @@ x-api-key: your_api_key_here
 ]
 ```
 
-#### Example Response - Failure
+### ❌ Exemplo de Resposta — Falha / Servidor Não Encontrado
+
 ```json
 [
   {
     "server": "cluster1.mongodb.net",
-    "status": "ok"
-  },
-  {
-    "server": "cluster2.mongodb.net",
     "status": "error",
     "error": "timed out"
-  }
-]
-```
-
-#### Example - Server not found in configuration
-```json
-[
+  },
   {
-    "server": "nonexistent_cluster.mongodb.net",
+    "server": "cluster_inexistente.mongodb.net",
     "status": "error",
     "error": "Server not found in configuration"
   }
@@ -129,15 +176,86 @@ x-api-key: your_api_key_here
 
 ---
 
-### `/v1/isalive`
+## 🌐 `/v2/generic`
 
-#### Description
-Checks if the API is alive (liveness probe).
+### 📌 Descrição
 
-#### Method
-`GET /v1/isalive`
+Realiza uma verificação de disponibilidade em um serviço ou endpoint HTTP/HTTPS genérico, retornando o status da conexão.
 
-#### Response
+Ideal para monitorar:
+- APIs de terceiros
+- Serviços internos da infraestrutura
+
+### 🧭 Método
+
+```
+POST /v2/generic
+```
+
+### 🔍 Corpo da Requisição (JSON)
+
+O endpoint aceita um payload JSON compatível com o modelo `GenericRequest`. Exemplo quando se espera receber um `response` do target:
+
+```json
+{
+  "url": "https://example.com/",
+  "method": "GET",
+  "headers": {
+    "additionalProp1": "string",
+    "additionalProp2": "string",
+    "additionalProp3": "string"
+  },
+  "payload": "string",
+  "auth": {
+    "additionalProp1": "string",
+    "additionalProp2": "string",
+    "additionalProp3": "string"
+  }
+}
+```
+
+> Observação: ainda é possível chamar via query string apenas com `url` (ex.: `/v2/generic?url=https://api.exemplo.com/health`), porém o uso do corpo JSON permite métodos diferentes de `GET`, headers, payload e informações de autenticação.
+
+### 🔐 Autenticação
+
+Obrigatória via header:
+
+```http
+x-api-key: sua_api_key_aqui
+```
+
+### ✅ Exemplo de Resposta
+
+O endpoint retorna um objeto compatível com o modelo `ApiStatus`:
+
+```json
+{
+  "url": "https://api.exemplo.com/health",
+  "status": "ok",
+  "status_code": 200,
+  "response": {"message": "healthy"}
+}
+```
+
+---
+
+## ❤️ `/v2/isalive`
+
+### 📌 Descrição
+
+Verifica se a própria API de monitoramento está em execução.
+
+- Não exige autenticação
+- Projetado para uso como **liveness probe** em deployments Kubernetes
+
+### 🧭 Método
+
+```
+GET /v2/isalive
+```
+
+### ✅ Resposta
+
 ```json
 {
   "status": "true"
@@ -146,13 +264,44 @@ Checks if the API is alive (liveness probe).
 
 ---
 
-## Data Models
+# 🧩 Modelos de Dados Principais
 
-### `ServerStatus`
+## 🗄️ `ServerStatus`
 
 ```python
-class ServerStatus(BaseModel):
-    server: str
-    status: str  # "ok" or "error"
-    error: Optional[str]
+class MongoDbServerStatus(BaseModel):
+  server: str
+  status: str  # "ok" ou "error"
+  error: Optional[str] = None
 ```
+
+---
+
+## 🌐 `GenericStatus`
+
+```python
+class ApiStatus(BaseModel):
+  url: str
+  status: str  # "ok" or "error"
+  status_code: Optional[int] = None
+  response: Optional[Any] = None
+  error: Optional[str] = None
+
+
+class GenericRequest(BaseModel):
+  url: AnyHttpUrl                             # Provides built-in validation for URLs
+  method: Optional[str] = "GET"               # HTTP method to use (default: GET)
+  headers: Optional[Dict[str, str]] = None    # Optional headers to include in the request
+  payload: Optional[Any] = None               # Optional request body (can be dict, list, str, etc.)
+  auth: Optional[Dict[str, str]] = None       # ex.: {"username": "...", "password": "..."}
+```
+
+---
+
+# 📌 Considerações Finais
+
+- Todas as rotas de monitoramento exigem autenticação via `API_KEY`
+- Endpoint `/v2/isalive` é público para integração com orquestradores
+- A API foi projetada para ser facilmente extensível para novos tipos de monitoramento
+
+---

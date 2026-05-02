@@ -1,6 +1,6 @@
-# Woopi Monitoring
+# Monitoring API
 
-This API provides a centralized interface for continuous monitoring of Woopi's infrastructure assets. Designed to be extensible, the API currently supports:
+This API provides a centralized interface for continuous monitoring of infrastructure assets inside Kubernetes environments. Designed to be extensible, the API currently supports:
 
 - Detailed health checks for MongoDB clusters
 - Availability checks for generic HTTP/HTTPS endpoints
@@ -62,7 +62,7 @@ This API provides a centralized interface for continuous monitoring of Woopi's i
 ### 1️⃣ Clone the repository
 
 ```bash
-git clone https://github.com/woopi-operacoes/monitoring-api.git
+git clone https://github.com/mjsbicigo/monitoring-api.git
 cd monitoring-api
 ```
 
