@@ -1,55 +1,75 @@
-name: Release Docker Image
+name: CI - Test, Build and Release
 
-on:
+on: 
   push:
-    tags:
-      - 'v*'
+    branches:
+      - master
+    paths-ignore:
+      - '.github/workflows/**'
+      - '**/*.md'
+      - '.gitignore'
+      - '.dockerignore'
 
 jobs:
-  build-and-push-tag:
-    runs-on: ubuntu-latest
-    name: Build and publish Docker image
-
-    permissions:
-      contents: write
-      packages: write
-
+  build_and_deploy:
+    name: 'Test, Build and Push Image'
+    runs-on: ['azure-identity']
     env:
-      IMAGE_NAME: monitoring-api
-      DOCKERHUB_REPO: ${{ secrets.DOCKERHUB_USERNAME }}/monitoring-api
+      REPOSITORY_NAME: "woopi-operacoes"
+      IMAGE_NAME: "monitoring-api"
+      DOCKERFILE_PATH: "."
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout Code
+      uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
 
-      - name: Log in to DockerHub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Install Dependencies and Run Tests
+      run: |
+        python -m pip install --upgrade pip
+        # Install dependencies from requirements.txt
+        pip install -r tests/requirements-test.txt
+        pip install pytest 
+        # Run tests with verbose output
+        pytest tests/ -v
 
-      - name: Extract version from tag
-        id: version
-        run: |
-          VERSION="${GITHUB_REF#refs/tags/}"
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+    - name: Declare variables
+      id: vars
+      shell: bash
+      run: |
+        if [ -z "$REPOSITORY_NAME" ] || [ -z "$IMAGE_NAME" ]; then
+          echo "REPOSITORY_NAME and IMAGE_NAME cannot be empty"
+          exit 1
+        fi
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: |
-            ${{ env.DOCKERHUB_REPO }}:${{ steps.version.outputs.version }}
-            ${{ env.DOCKERHUB_REPO }}:latest
+    - name: Bump version and push tag
+      id: tag_version
+      uses: mathieudutour/github-tag-action@v6.2
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        # 'minor' bumps the version from 1.0.0 to 1.1.0, 'patch' bumps it to 1.0.1, and 'major' bumps it to 2.0.0
+        default_bump: minor 
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.version.outputs.version }}
-          name: Release ${{ steps.version.outputs.version }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Azure login
+      run: az login --identity
+
+    - name: ACR login
+      run: az acr login -n acrapplications
+    
+    - name: Build and Push Image
+      run: |
+        az acr build \
+          -t acrapplications.azurecr.io/$REPOSITORY_NAME/$IMAGE_NAME:${{ steps.tag_version.outputs.new_tag }} \
+          -t acrapplications.azurecr.io/$REPOSITORY_NAME/$IMAGE_NAME:latest \
+          -r acrapplications $DOCKERFILE_PATH
+
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ steps.tag_version.outputs.new_tag }}
+        name: Release ${{ steps.tag_version.outputs.new_tag }}
+        generate_release_notes: true
