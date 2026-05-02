@@ -152,10 +152,21 @@ x-api-key: sua_api_key_aqui
   },
   {
     "server": "cluster2.mongodb.net",
+  ```
+  http://localhost:8080
+  ```
     "status": "ok"
   }
 ]
-```
+  ## 🛠️ CI/CD (Build e Publicação de Imagens)
+
+  O pipeline de CI do repositório executa testes, aplica versionamento automático por tag e publica a imagem Docker no Docker Hub.
+
+  - **Repositório Docker Hub:** `marciosbicigo/monitoring-api`
+  - **Secrets necessários no GitHub:** `DOCKERHUB_USERNAME` e `DOCKERHUB_TOKEN`
+
+  Após um merge na branch `master`, o workflow cria uma nova tag de versão, constrói a imagem e faz push para as tags `vX.Y.Z` e `latest` no Docker Hub.
+
 
 ### ❌ Exemplo de Resposta — Falha / Servidor Não Encontrado
 

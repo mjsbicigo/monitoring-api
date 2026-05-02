@@ -106,6 +106,15 @@ http://localhost:8080
 
 ---
 
+## 🛠️ CI/CD (Build and Image Publication)
+
+The repository CI pipeline runs tests, applies automatic version tagging and publishes the Docker image to Docker Hub.
+
+- **Docker Hub repository:** `marciosbicigo/monitoring-api`
+- **Required GitHub Secrets:** `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`
+
+After a merge to the `master` branch the workflow will create a new version tag, build the image and push it with both the `vX.Y.Z` tag and `latest` to Docker Hub.
+
 # 📡 API Routes (v2)
 
 ## 🔎 `/v2/mongohealth`

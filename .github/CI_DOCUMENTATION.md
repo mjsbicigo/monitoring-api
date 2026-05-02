@@ -1,6 +1,6 @@
 # CI/CD - Test, Build and Release
 
-Este documento descreve o fluxo de Integração Contínua (CI) e Entrega Contínua (CD) do projeto. O pipeline automatiza a execução de testes, o versionamento semântico, a construção da imagem Docker e a publicação no Azure Container Registry (ACR).
+Este documento descreve o fluxo de Integração Contínua (CI) e Entrega Contínua (CD) do projeto. O pipeline automatiza a execução de testes, o versionamento semântico, a construção da imagem Docker e a publicação no Docker Hub.
 
 ---
 
@@ -54,11 +54,19 @@ Utilizado para **alterações críticas** que quebram a compatibilidade (Breakin
 
 ## 🐳 Infraestrutura e Container Registry
 
-As imagens geradas são armazenadas no **Azure Container Registry (ACR)** da organização.
+As imagens geradas são publicadas no **Docker Hub**.
 
-* **Registry:** `acrapplications.azurecr.io`
-* **Repositório:** `woopi-operacoes/monitoring-api`
+- **Repository (Docker Hub):** `marciosbicigo/monitoring-api`
 
 A imagem sempre estará disponível em duas versões após um pipeline bem-sucedido:
-1. Pela tag exata da versão (ex: `acrapplications.azurecr.io/woopi-operacoes/monitoring-api:v1.0.0`) - *Recomendado para estabilidade.*
-2. Pela tag flutuante `latest` (ex: `acrapplications.azurecr.io/woopi-operacoes/monitoring-api:latest`) - *Sempre aponta para o último build feito na master.*
+1. Pela tag exata da versão (ex: `marciosbicigo/monitoring-api:v1.0.0`) - *Recomendado para estabilidade.*
+2. Pela tag flutuante `latest` (ex: `marciosbicigo/monitoring-api:latest`) - *Sempre aponta para o último build feito na master.*
+
+### Autenticação e Secrets
+
+O workflow usa autenticação contra o Docker Hub via variáveis de ambiente definidas como *secrets* no repositório GitHub:
+
+- `DOCKERHUB_USERNAME` — usuário do Docker Hub
+- `DOCKERHUB_TOKEN` — token ou senha do Docker Hub (recomendado usar um Personal Access Token)
+
+As etapas de build efetuam o login no Docker Hub com essas credenciais e em seguida fazem o push das tags geradas.
