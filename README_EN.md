@@ -29,7 +29,7 @@ This API provides a centralized interface for continuous monitoring of infrastru
 
 ## 📋 Requirements
 
-- Python **3.13**
+- Python **3.14**
 - `pip` (Python package manager)
 
 ### Required Environment Variables

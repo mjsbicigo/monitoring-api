@@ -8,7 +8,7 @@ Este documento descreve o fluxo de Integração Contínua (CI) e Entrega Contín
 
 Toda vez que uma alteração de código é enviada para a branch `master`, o GitHub Actions inicia automaticamente o workflow (`azure-identity` runner). O processo passa pelas seguintes etapas:
 
-1. **Checkout e Configuração:** Baixa o código mais recente e prepara o ambiente com Python 3.13.
+1. **Checkout e Configuração:** Baixa o código mais recente e prepara o ambiente com Python 3.14.
 2. **Testes Automatizados (CI):** Instala as dependências de teste e executa o `pytest`. Se os testes falharem, o pipeline é interrompido imediatamente, garantindo que código quebrado não seja publicado.
 3. **Versionamento (Bump Version):** Lê o histórico de commits, calcula automaticamente a próxima versão e cria uma nova Tag (ex: `v1.2.0`).
 4. **Build e Push (CD):** Faz login no Azure, constrói a imagem Docker da aplicação e faz o push para o ACR com duas tags: a versão específica gerada e a tag `latest`.
