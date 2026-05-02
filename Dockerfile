@@ -29,6 +29,6 @@ EXPOSE 8080
 # Enter the subfolder where main.py and the api folder are actually located. Avoiding issues with relative imports and ensuring the correct working directory for Uvicorn.
 WORKDIR /app/app
 
-# Initialize the application directly via Uvicorn (Ensures better process management in the container)
+# Initialize the application directly with Uvicorn (Ensures better process management in the container)
 # Note: Assuming the FastAPI instance 'app' is inside 'app/main.py'
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
